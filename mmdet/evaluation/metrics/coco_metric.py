@@ -139,6 +139,8 @@ class CocoMetric(BaseMetric):
                     sorted_categories = sorted(
                         categories, key=lambda i: i['id'])
                     self._coco_api.dataset['categories'] = sorted_categories
+            self.cat_ids = self._coco_api.getCatIds()
+            self.img_ids = list(self._coco_api.imgs.keys())
         else:
             self._coco_api = None
 
