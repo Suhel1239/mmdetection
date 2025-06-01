@@ -531,7 +531,11 @@ class ATSSVLFusionHead(ATSSHead):
 
         # Loss is not computed for the padded regions of the text.
         print(f"text_masks shape: {self.text_masks.shape}")
+        # assert (self.text_masks.dim() == 2) # changed 
+        if self.text_masks.dim() == 3:
+                self.text_masks = self.text_masks[0]
         assert (self.text_masks.dim() == 2)
+                          #################
         text_mask = (self.text_masks > 0).unsqueeze(1)
         text_mask = text_mask.repeat(1, cls_score.size(1), 1)
         cls_score = torch.masked_select(cls_score, text_mask).contiguous()
