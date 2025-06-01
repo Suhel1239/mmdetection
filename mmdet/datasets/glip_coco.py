@@ -1,4 +1,4 @@
-# from mmdet.datasets import CocoDataset
+from .coco import CocoDataset
 from mmengine.registry import DATASETS
 
 @DATASETS.register_module()
