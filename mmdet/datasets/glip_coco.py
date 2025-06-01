@@ -1,5 +1,5 @@
 from .coco import CocoDataset
-from mmengine.registry import DATASETS
+from mmdet.registry import DATASETS
 
 @DATASETS.register_module()
 class GLIPCocoDataset(CocoDataset):
