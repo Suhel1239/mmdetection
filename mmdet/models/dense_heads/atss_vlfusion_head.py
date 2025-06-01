@@ -530,7 +530,7 @@ class ATSSVLFusionHead(ATSSHead):
         pos_inds = (labels.sum(-1) > 0).reshape(-1)
 
         # Loss is not computed for the padded regions of the text.
-        print(f"text_masks shape: {self.text_masks.shape}")
+        # print(f"text_masks shape: {self.text_masks.shape}")
         assert (self.text_masks.dim() == 2) # changed 
         text_mask = (self.text_masks > 0).unsqueeze(1)
         text_mask = text_mask.repeat(1, cls_score.size(1), 1)
