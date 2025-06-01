@@ -544,9 +544,9 @@ class ATSSVLFusionHead(ATSSHead):
         #                               None].repeat(1, 1, text_mask.size(-1))
         text_mask = self.text_masks.any(dim=1)  # shape: [num_classes], dtype: bool
 
-        cls_score = cls_score[:, text_mask]
-        labels = labels[:, text_mask]
-        label_weights = label_weights[:, text_mask]
+        cls_score = cls_score[:,:, text_mask]
+        labels = labels[:, :, text_mask]
+        label_weights = label_weights[:,:, text_mask]
       #***********#
                           
         label_weights = torch.masked_select(label_weights, text_mask)
