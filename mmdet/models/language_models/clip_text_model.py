@@ -224,3 +224,101 @@ class CLIPTextModel(BaseModel):
         for name, param in self.model.named_parameters():
             # HuggingFace CLIP text model does not have text_projection layer explicitly exposed
             param.requires_grad = requires_grad
+
+###############################################
+
+# from typing import Sequence, Optional, Dict
+# from types import SimpleNamespace
+
+# import torch
+# from torch import nn
+# from mmengine.model import BaseModel
+
+# from transformers import CLIPTokenizer, CLIPTextModel as HFCLIPTextModel
+
+# from mmdet.registry import MODELS
+
+
+# @MODELS.register_module()
+# class CLIPTextModel(BaseModel):
+#     def __init__(self,
+#                  name: str = 'ViT-B-32-quickgelu',
+#                  pretrained_model_name_or_path: str = 'openai/clip-vit-base-patch32',
+#                  max_tokens: int = 77,
+#                  use_sub_sentence_represent: bool = False,
+#                  special_tokens_list: Optional[list] = None,
+#                  num_layers_of_embedded: int = 1,
+#                  pad_to_max: bool = False,
+#                  add_pooling_layer: bool = False,
+#                  **kwargs):
+#         kwargs.pop('pad_to_max', None)
+#         kwargs.pop('use_sub_sentence_represent', None)
+#         kwargs.pop('special_tokens_list', None)
+#         kwargs.pop('add_pooling_layer', None)
+
+#         super().__init__(**kwargs)
+
+#         self.max_tokens = max_tokens
+#         self.use_sub_sentence_represent = use_sub_sentence_represent
+#         self.pad_to_max = pad_to_max
+#         self.add_pooling_layer = add_pooling_layer
+#         self.num_layers_of_embedded = num_layers_of_embedded
+
+#         self.tokenizer = CLIPTokenizer.from_pretrained(pretrained_model_name_or_path, use_fast=True)
+#         self.model = HFCLIPTextModel.from_pretrained(pretrained_model_name_or_path, trust_remote_code=True)
+
+#         self.set_requires_grad(False)
+
+#         self.language_dim = self.model.config.hidden_size
+#         self.language_backbone = SimpleNamespace(
+#             body=SimpleNamespace(language_dim=self.language_dim)
+#         )
+
+#     def tokenize(self, captions: Sequence[str]) -> Dict[str, torch.Tensor]:
+#         """Tokenize text outside the forward pass for GroundingDINO compatibility."""
+#         return self.tokenizer(
+#             captions,
+#             padding='max_length' if self.pad_to_max else True,
+#             truncation=True,
+#             max_length=self.max_tokens,
+#             return_tensors='pt'
+#         )
+
+#     def forward(self, tokenized_text: Dict[str, torch.Tensor], **kwargs) -> dict:
+#         """
+#         Forward pass expects tokenized input dict with keys 'input_ids' and 'attention_mask'.
+
+#         Args:
+#             tokenized_text (dict): Tokenized text inputs from tokenizer.
+
+#         Returns:
+#             dict: Dictionary with keys 'embedded', 'masks', and 'hidden'.
+#         """
+#         device = next(self.model.parameters()).device
+
+#         input_ids = tokenized_text['input_ids'].to(device)
+#         attention_mask = tokenized_text['attention_mask'].to(device)
+
+#         outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, **kwargs)
+
+#         if outputs.pooler_output is not None:
+#             embedded = outputs.pooler_output
+#         else:
+#             embedded = outputs.last_hidden_state.mean(dim=1)
+
+#         results = {
+#             'embedded': embedded,
+#             'masks': attention_mask,
+#             'hidden': outputs.last_hidden_state,
+#         }
+
+#         if self.use_sub_sentence_represent:
+#             results['text_token_mask'] = attention_mask.bool()
+
+#         return results
+
+#     def set_requires_grad(self, requires_grad: bool = True, freeze_projection: bool = False):
+#         """Freeze or unfreeze all parameters."""
+#         for name, param in self.model.named_parameters():
+#             param.requires_grad = requires_grad
+
