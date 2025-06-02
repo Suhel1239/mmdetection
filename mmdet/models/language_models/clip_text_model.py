@@ -9,7 +9,7 @@ from mmdet.registry import MODELS
 @MODELS.register_module()
 class CLIPTextModel(BaseModel):
     def __init__(self,
-                 model_name='ViT-B-16',
+                 name='ViT-B-16',
                  pretrained='openai',
                  **kwargs):
         """
@@ -21,10 +21,10 @@ class CLIPTextModel(BaseModel):
 
         # Load CLIP model + tokenizer
         self.model, _, _ = open_clip.create_model_and_transforms(
-            model_name, pretrained=pretrained)
+            name, pretrained=pretrained)
 
         # Get tokenizer for the model
-        self.tokenizer = open_clip.get_tokenizer(model_name)
+        self.tokenizer = open_clip.get_tokenizer(name)
 
         # Use only text encoder from CLIP
         self.text_encoder = self.model.transformer
