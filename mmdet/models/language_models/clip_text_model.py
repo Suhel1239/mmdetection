@@ -173,7 +173,7 @@ class CLIPTextModel(BaseModel):
 
         # Load HF CLIP tokenizer and model
         self.tokenizer = CLIPTokenizer.from_pretrained(pretrained_model_name_or_path , use_fast=True)
-        self.model = HFCLIPTextModel.from_pretrained(pretrained_model_name_or_path)
+        self.model = HFCLIPTextModel.from_pretrained(pretrained_model_name_or_path , trust_remote_code=True)
 
         # Freeze parameters by default
         self.set_requires_grad(False)
