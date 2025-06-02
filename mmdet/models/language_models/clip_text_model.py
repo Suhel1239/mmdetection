@@ -53,7 +53,13 @@ class CLIPTextModel(BaseModel):
         for p in self.model.parameters():
             p.requires_grad = False
 
+        # Language embedding dimension
         self.language_dim = self.model.text_projection.shape[1]
+
+        # Add these to fix the AttributeError in grounding_dino.py
+        self.language_backbone = self
+        self.body = self
+
         self.num_layers_of_embedded = num_layers_of_embedded
 
         if self.use_sub_sentence_represent:
