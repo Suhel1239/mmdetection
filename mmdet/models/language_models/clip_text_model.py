@@ -172,7 +172,7 @@ class CLIPTextModel(BaseModel):
         self.num_layers_of_embedded = num_layers_of_embedded
 
         # Load HF CLIP tokenizer and model
-        self.tokenizer = CLIPTokenizer.from_pretrained(pretrained_model_name_or_path)
+        self.tokenizer = CLIPTokenizer.from_pretrained(pretrained_model_name_or_path , use_fast=True)
         self.model = HFCLIPTextModel.from_pretrained(pretrained_model_name_or_path)
 
         # Freeze parameters by default
