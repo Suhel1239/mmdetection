@@ -148,6 +148,7 @@ class CLIPTextModel(BaseModel):
     """
 
     def __init__(self,
+                 name: str = 'ViT-B-32-quickgelu',
                  pretrained_model_name_or_path: str = 'openai/clip-vit-base-patch32',
                  max_tokens: int = 77,
                  use_sub_sentence_represent: bool = False,
