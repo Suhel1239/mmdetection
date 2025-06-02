@@ -87,6 +87,7 @@
 
 #         return results
  ######################################################
+# Copyright (c) OpenMMLab. All rights reserved.
 from collections import OrderedDict
 from typing import Sequence
 from types import SimpleNamespace
@@ -108,48 +109,54 @@ class CLIPTextModel(BaseModel):
     """CLIP model for language embedding using OpenCLIP.
 
     Args:
-        name (str): CLIP model name, e.g. 'ViT-B-32' or 'ViT-B-32-quickgelu'.
+        name (str): CLIP model name.
         pretrained (str): Pretrained weights name, e.g. 'openai'.
-        max_tokens (int): Max token length (CLIP usually uses 77).
+        max_tokens (int): Max token length (CLIP uses 77).
         use_sub_sentence_represent (bool): Enable sub-sentence representation.
         special_tokens_list (list): List of special tokens for sentence splits.
         num_layers_of_embedded (int): How many hidden layers to average.
-        pad_to_max (bool): Whether to pad tokenized input to max length.
-        add_pooling_layer (bool): Placeholder for API compatibility.
+        pad_to_max (bool): Whether to pad input to max length.
+        add_pooling_layer (bool): Whether to use pooling (not used here).
     """
 
     def __init__(self,
                  name: str = 'ViT-B-32-quickgelu',
                  pretrained: str = 'openai',
                  max_tokens: int = 77,
-                 use_sub_sentence_represent: bool = True,
-                 special_tokens_list: list = ['[CLS]', '[SEP]', '.', '?'],
+                 use_sub_sentence_represent: bool = False,
+                 special_tokens_list: list = None,
                  num_layers_of_embedded: int = 1,
                  pad_to_max: bool = False,
                  add_pooling_layer: bool = False,
                  **kwargs):
+
+        # Remove extra arguments from kwargs before passing to BaseModel
+        kwargs.pop('pad_to_max', None)
+        kwargs.pop('use_sub_sentence_represent', None)
+        kwargs.pop('special_tokens_list', None)
+        kwargs.pop('add_pooling_layer', None)
+
         super().__init__(**kwargs)
 
         if open_clip is None:
-            raise ImportError(
-                'open_clip not found. Install with: pip install open_clip_torch')
+            raise ImportError('open_clip not found. Install it with: pip install open_clip_torch')
 
         self.max_tokens = max_tokens
         self.use_sub_sentence_represent = use_sub_sentence_represent
         self.pad_to_max = pad_to_max
-        self.add_pooling_layer = add_pooling_layer  # for future use / compatibility
+        self.add_pooling_layer = add_pooling_layer
+        self.num_layers_of_embedded = num_layers_of_embedded
 
-        # Load model and tokenizer
+        # Load CLIP model and tokenizer
         self.model, _, _ = open_clip.create_model_and_transforms(
             model_name=name, pretrained=pretrained)
         self.tokenizer = open_clip.get_tokenizer(name)
 
-        # Freeze model parameters by default
         self.set_requires_grad(False)
 
         self.language_dim = self.model.text_projection.shape[1]
-        self.num_layers_of_embedded = num_layers_of_embedded
 
+        # For compatibility with MMDet
         self.language_backbone = SimpleNamespace(
             body=SimpleNamespace(language_dim=self.language_dim)
         )
@@ -163,14 +170,17 @@ class CLIPTextModel(BaseModel):
     def forward(self, captions: Sequence[str], **kwargs) -> dict:
         """Forward pass to compute CLIP text embeddings."""
         device = next(self.model.parameters()).device
+
         tokenized = self.tokenizer(
-            captions, context_length=self.model.context_length).to(device)
+            captions,
+            context_length=self.model.context_length
+        ).to(device)
 
         outputs = self.model.encode_text(tokenized)  # [B, D]
 
         results = {
             'embedded': outputs,                # [B, D]
-            'masks': torch.ones_like(outputs),  # Dummy mask for compatibility
+            'masks': torch.ones_like(outputs),  # Dummy mask
             'hidden': outputs.unsqueeze(1)      # [B, 1, D]
         }
 
@@ -179,16 +189,16 @@ class CLIPTextModel(BaseModel):
 
         return results
 
-    def set_requires_grad(self, requires_grad: bool = True,
-                          freeze_projection: bool = False):
-        """Set requires_grad for model parameters.
+    def set_requires_grad(self, requires_grad: bool = True, freeze_projection: bool = False):
+        """Enable or disable gradients for CLIP text encoder.
 
         Args:
-            requires_grad (bool): Whether to enable gradients.
-            freeze_projection (bool): Whether to keep the final projection layer frozen.
+            requires_grad (bool): Enable gradients for the model.
+            freeze_projection (bool): Keep the text_projection layer frozen.
         """
         for name, param in self.model.named_parameters():
             if freeze_projection and 'text_projection' in name:
                 param.requires_grad = False
             else:
                 param.requires_grad = requires_grad
+
