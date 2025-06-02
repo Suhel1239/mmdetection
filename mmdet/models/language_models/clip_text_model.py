@@ -87,7 +87,6 @@
 
 #         return results
  ######################################################
-# Copyright (c) OpenMMLab. All rights reserved.
 from collections import OrderedDict
 from typing import Sequence
 from types import SimpleNamespace
@@ -115,15 +114,19 @@ class CLIPTextModel(BaseModel):
         use_sub_sentence_represent (bool): Enable sub-sentence representation.
         special_tokens_list (list): List of special tokens for sentence splits.
         num_layers_of_embedded (int): How many hidden layers to average.
+        pad_to_max (bool): Whether to pad tokenized input to max length.
+        add_pooling_layer (bool): Placeholder for API compatibility.
     """
 
     def __init__(self,
                  name: str = 'ViT-B-32-quickgelu',
                  pretrained: str = 'openai',
                  max_tokens: int = 77,
-                 use_sub_sentence_represent: bool = False,
-                 special_tokens_list: list = None,
+                 use_sub_sentence_represent: bool = True,
+                 special_tokens_list: list = ['[CLS]', '[SEP]', '.', '?'],
                  num_layers_of_embedded: int = 1,
+                 pad_to_max: bool = False,
+                 add_pooling_layer: bool = False,
                  **kwargs):
         super().__init__(**kwargs)
 
@@ -133,6 +136,8 @@ class CLIPTextModel(BaseModel):
 
         self.max_tokens = max_tokens
         self.use_sub_sentence_represent = use_sub_sentence_represent
+        self.pad_to_max = pad_to_max
+        self.add_pooling_layer = add_pooling_layer  # for future use / compatibility
 
         # Load model and tokenizer
         self.model, _, _ = open_clip.create_model_and_transforms(
@@ -174,7 +179,7 @@ class CLIPTextModel(BaseModel):
 
         return results
 
-    def set_requires_grad(self, requires_grad: bool = True, 
+    def set_requires_grad(self, requires_grad: bool = True,
                           freeze_projection: bool = False):
         """Set requires_grad for model parameters.
 
