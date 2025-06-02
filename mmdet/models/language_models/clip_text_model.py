@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from collections import OrderedDict
 from typing import Sequence
+from types import SimpleNamespace
 
 import torch
 from mmengine.model import BaseModel
@@ -19,7 +20,7 @@ class CLIPTextModel(BaseModel):
     """CLIP model for language embedding using OpenCLIP.
 
     Args:
-        name (str): CLIP model name, e.g. 'ViT-B-32'.
+        name (str): CLIP model name, e.g. 'ViT-B-32' or 'ViT-B-32-quickgelu'.
         pretrained (str): Pretrained weights name, e.g. 'openai'.
         max_tokens (int): Max token length (CLIP usually uses 77).
         use_sub_sentence_represent (bool): Enable sub-sentence representation.
@@ -28,7 +29,7 @@ class CLIPTextModel(BaseModel):
     """
 
     def __init__(self,
-                 name: str = 'ViT-B-32',
+                 name: str = 'ViT-B-32-quickgelu',  # Use -quickgelu to avoid warning
                  pretrained: str = 'openai',
                  max_tokens: int = 77,
                  use_sub_sentence_represent: bool = False,
@@ -49,18 +50,17 @@ class CLIPTextModel(BaseModel):
             model_name=name, pretrained=pretrained)
         self.tokenizer = open_clip.get_tokenizer(name)
 
-        # Model is frozen by default, unfreeze if needed
+        # Freeze model parameters by default
         for p in self.model.parameters():
             p.requires_grad = False
 
-        # Language embedding dimension
         self.language_dim = self.model.text_projection.shape[1]
-
-        # Add these to fix the AttributeError in grounding_dino.py
-        self.language_backbone = self
-        self.body = self
-
         self.num_layers_of_embedded = num_layers_of_embedded
+
+        # Avoid recursion error: use dummy namespaces for attributes accessed externally
+        self.language_backbone = SimpleNamespace(
+            body=SimpleNamespace(language_dim=self.language_dim)
+        )
 
         if self.use_sub_sentence_represent:
             assert special_tokens_list is not None, \
