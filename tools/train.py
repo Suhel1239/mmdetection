@@ -123,6 +123,15 @@ def main():
     from mmengine.runner import checkpoint
     
     # Register all custom types your checkpoint uses:
+    import torch
+    import numpy as np
+    import builtins
+    from numpy.core.multiarray import _reconstruct
+    from numpy import dtype
+    from numpy.dtypes import Int64DType, Float64DType
+    from mmengine.logging.history_buffer import HistoryBuffer
+    from mmengine.runner import checkpoint
+    
     torch.serialization.add_safe_globals([
         _reconstruct,
         np.ndarray,
@@ -130,14 +139,12 @@ def main():
         Int64DType,
         Float64DType,
         HistoryBuffer,
+        builtins.getattr,
     ])
     
-    # Save original loader
     original_load_checkpoint = checkpoint._load_checkpoint
     
-    # Patch loader to force weights_only=False
     def patched_load_checkpoint(filename, map_location=None, logger=None, weights_only=None):
-        # Ignore weights_only param and force False
         return original_load_checkpoint(
             filename, map_location=map_location, logger=logger, weights_only=False
         )
