@@ -113,7 +113,13 @@ def main():
         # build customized runner from the registry
         # if 'runner_type' is set in the cfg
         runner = RUNNERS.build(cfg)
-
+    ######################
+    import torch
+    from mmengine.logging import history_buffer
+    torch.serialization.add_safe_globals({
+        'mmengine.logging.history_buffer.HistoryBuffer': history_buffer.HistoryBuffer
+    })
+    ####################
     # start training
     runner.train()
 
