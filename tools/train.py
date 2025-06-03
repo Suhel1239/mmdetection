@@ -118,25 +118,30 @@ def main():
     import numpy as np
     from numpy.core.multiarray import _reconstruct
     from numpy import dtype
-    from numpy.dtypes import Float64DType
+    from numpy.dtypes import Int64DType, Float64DType
     from mmengine.logging.history_buffer import HistoryBuffer
     from mmengine.runner import checkpoint
     
-    # Allow necessary globals used in checkpoint pickle
+    # Register all custom types your checkpoint uses:
     torch.serialization.add_safe_globals([
         _reconstruct,
         np.ndarray,
         dtype,
+        Int64DType,
         Float64DType,
         HistoryBuffer,
     ])
     
-    # Force weights_only=False in checkpoint loading
+    # Save original loader
     original_load_checkpoint = checkpoint._load_checkpoint
-    def patched_load_checkpoint(filename, map_location=None, logger=None):
+    
+    # Patch loader to force weights_only=False
+    def patched_load_checkpoint(filename, map_location=None, logger=None, weights_only=None):
+        # Ignore weights_only param and force False
         return original_load_checkpoint(
             filename, map_location=map_location, logger=logger, weights_only=False
         )
+    
     checkpoint._load_checkpoint = patched_load_checkpoint
     ####################
     # start training
