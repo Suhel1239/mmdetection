@@ -115,10 +115,8 @@ def main():
         runner = RUNNERS.build(cfg)
     ######################
     import torch
-    from mmengine.logging import history_buffer
-    torch.serialization.add_safe_globals({
-        'mmengine.logging.history_buffer.HistoryBuffer': history_buffer.HistoryBuffer
-    })
+    from mmengine.logging.history_buffer import HistoryBuffer
+    torch.serialization.add_safe_globals([HistoryBuffer])
     ####################
     # start training
     runner.train()
