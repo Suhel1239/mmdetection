@@ -115,8 +115,16 @@ def main():
         runner = RUNNERS.build(cfg)
     ######################
     import torch
+    from numpy.core.multiarray import _reconstruct
     from mmengine.logging.history_buffer import HistoryBuffer
-    torch.serialization.add_safe_globals([HistoryBuffer])
+    from mmengine.runner import checkpoint
+
+    torch.serialization.add_safe_globals([_reconstruct, HistoryBuffer])
+
+    orig_load_checkpoint = checkpoint._load_checkpoint
+    def patched_load_checkpoint(filename, map_location=None, logger=None):
+        return orig_load_checkpoint(filename, map_location=map_location, logger=logger, weights_only=False)
+    checkpoint._load_checkpoint = patched_load_checkpoint
     ####################
     # start training
     runner.train()
