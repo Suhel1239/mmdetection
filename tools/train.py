@@ -126,7 +126,7 @@ def main():
     import torch
     import numpy as np
     import builtins
-    from numpy.core.multiarray import _reconstruct
+    from numpy.core.multiarray import _reconstruct, scalar
     from numpy import dtype
     from numpy.dtypes import Int64DType, Float64DType
     from mmengine.logging.history_buffer import HistoryBuffer
@@ -140,6 +140,7 @@ def main():
         Float64DType,
         HistoryBuffer,
         builtins.getattr,
+        scalar,  # new addition
     ])
     
     original_load_checkpoint = checkpoint._load_checkpoint
