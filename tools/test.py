@@ -140,7 +140,45 @@ def main():
             'The dump file must be a pkl file.'
         runner.test_evaluator.metrics.append(
             DumpDetResults(out_file_path=args.out))
-
+    #########################################################
+    import torch
+    import numpy as np
+    from numpy.core.multiarray import _reconstruct
+    from numpy import dtype
+    from numpy.dtypes import Int64DType, Float64DType
+    from mmengine.logging.history_buffer import HistoryBuffer
+    from mmengine.runner import checkpoint
+    
+    # Register all custom types your checkpoint uses:
+    import torch
+    import numpy as np
+    import builtins
+    from numpy.core.multiarray import _reconstruct, scalar
+    from numpy import dtype
+    from numpy.dtypes import Int64DType, Float64DType
+    from mmengine.logging.history_buffer import HistoryBuffer
+    from mmengine.runner import checkpoint
+    
+    torch.serialization.add_safe_globals([
+        _reconstruct,
+        np.ndarray,
+        dtype,
+        Int64DType,
+        Float64DType,
+        HistoryBuffer,
+        builtins.getattr,
+        scalar,  # new addition
+    ])
+    
+    original_load_checkpoint = checkpoint._load_checkpoint
+    
+    def patched_load_checkpoint(filename, map_location=None, logger=None, weights_only=None):
+        return original_load_checkpoint(
+            filename, map_location=map_location, logger=logger, weights_only=False
+        )
+    
+    checkpoint._load_checkpoint = patched_load_checkpoint
+    ##########################################################
     # start testing
     runner.test()
 
