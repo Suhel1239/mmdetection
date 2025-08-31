@@ -38,7 +38,7 @@ class ODVGDataset(BaseDetDataset):
         out_data_list = []
         for data in data_list:
             data_info = {}
-            img_path = osp.join(self.data_prefix['img'], data['filename'])
+            img_path = osp.join(self.data_prefix['img'],data.get('filename', data.get('file_name')))
             data_info['img_path'] = img_path
             data_info['height'] = data['height']
             data_info['width'] = data['width']
