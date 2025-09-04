@@ -66,6 +66,15 @@ class RefExpMetric(BaseMetric):
                 target_bbox[2] + target_bbox[0],
                 target_bbox[3] + target_bbox[1],
             ]
+            #############################
+            if idx == 0:
+                print("\n--- Debugging bbox formats ---")
+                print(f"Image ID: {img_id}")
+                print(f"Prediction sample: {result['bboxes'][0]}")
+                print(f"GT bbox (COCO [x,y,w,h]): {target_bbox}")
+                print(f"GT bbox (converted [x1,y1,x2,y2]): {converted_bbox}")
+                print("------------------------------\n")
+             ##############################   
             iou = bbox_overlaps(result['bboxes'],
                                 np.array(converted_bbox).reshape(-1, 4))
             dataset_name = 'refcoco'
